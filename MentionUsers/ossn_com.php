@@ -40,18 +40,35 @@ function com_notificationHandler($callback, $type, $params, $message) {
      foreach ($messageArr as $messagekey => $messagevalue) {
           if ($messagevalue == "@") {
                foreach ($users as $key => $value) {
-                    //modify these two lines to use the username if you use ~Z~Mans user name component
-                    $len = strlen($value->fullname);
-                    if (strtolower(substr($message, $messagekey + 1, $len)) == strtolower($value->fullname)) {
-                         //error_log("Matched Substr, Sending Notification");
-                         // if we have a poster guid then this is a wall post else its a comment so the payload changes
-                         if (strlen($params['poster_guid']) > 0) {
-                              $notifications->add($type, $params['poster_guid'], $params['object_guid'], $params['object_guid'], $value->guid);
-                         }
-                         else {
-                              $notifications->add($type, $params['owner_guid'], $params['subject_guid'], $params['id'], $value->guid);
+                    if (com_is_active('DisplayUsername')) {
+                         $name = $value->username;
+                         $len = strlen($name);
+                         // we want to exact match the user names since they can be the characters but different casing whereas names the casing shouldnt matter
+                         if (substr($message, $messagekey + 1, $len) == $name) {
+                              // if we have a poster guid then this is a wall post else its a comment so the payload changes
+                              if (strlen($params['poster_guid']) > 0) {
+                                   $notifications->add($type, $params['poster_guid'], $params['object_guid'], $params['object_guid'], $value->guid);
+                              }
+                              else {
+                                   $notifications->add($type, $params['owner_guid'], $params['subject_guid'], $params['id'], $value->guid);
+                              }
                          }
                     }
+                    else {
+                         $name = $value->fullname;
+                         $len = strlen($name);
+                         // we can lowercase the names because they dont matter 
+                         if (strtolower(substr($message, $messagekey + 1, $len)) == strtolower($name)) {
+                              // if we have a poster guid then this is a wall post else its a comment so the payload changes
+                              if (strlen($params['poster_guid']) > 0) {
+                                   $notifications->add($type, $params['poster_guid'], $params['object_guid'], $params['object_guid'], $value->guid);
+                              }
+                              else {
+                                   $notifications->add($type, $params['owner_guid'], $params['subject_guid'], $params['id'], $value->guid);
+                              }
+                         }
+                    }
+
                }
           }
      }
@@ -61,8 +78,13 @@ function com_mention_notifier_view_notification($hook, $type, $return, $params) 
      $notif          = $params;
      $baseurl        = ossn_site_url();
      $user           = ossn_user_by_guid($notif->poster_guid);
-     //modify to use username if you use ~Z~Mans user name component 
-     $user->fullname = "<strong>{$user->fullname}</strong>";
+     if (com_is_active('DisplayUsername')) {
+          $name = $user->username;
+     }
+     else {
+          $name = $user->fullname;
+     }
+     $user->fullname = "<strong>{$name}</strong>";
      $iconURL        = $user->iconURL()->small;
 
      $img = "<div class='notification-image'><img src='{$iconURL}' /></div>";
