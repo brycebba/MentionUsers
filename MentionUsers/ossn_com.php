@@ -36,40 +36,49 @@ function com_notificationHandler($callback, $type, $params, $message) {
      $notifications = new OssnNotifications;
      $user = new OssnUser;
      $users = $user->getSiteUsers(['page_limit' => false]);
+     $notifyUsersArr = array();
 
+     // load up the array of users to notify
      foreach ($messageArr as $messagekey => $messagevalue) {
           if ($messagevalue == "@") {
                foreach ($users as $key => $value) {
+                    // check to see if the component from https://www.opensource-socialnetwork.org/component/view/3065/display-username is enabled. 
+                    // if it is then we search the mentioned user by user name
                     if (com_is_active('DisplayUsername')) {
                          $name = $value->username;
                          $len = strlen($name);
                          // we want to exact match the user names since they can be the characters but different casing whereas names the casing shouldnt matter
                          if (substr($message, $messagekey + 1, $len) == $name) {
-                              // if we have a poster guid then this is a wall post else its a comment so the payload changes
-                              if (strlen($params['poster_guid']) > 0) {
-                                   $notifications->add($type, $params['poster_guid'], $params['object_guid'], $params['object_guid'], $value->guid);
-                              }
-                              else {
-                                   $notifications->add($type, $params['owner_guid'], $params['subject_guid'], $params['id'], $value->guid);
+                              // only add the user to the array if they are not in it already
+                              if (!in_array($value, $notifyUsersArr)) {
+                                   array_push($notifyUsersArr, $value);
                               }
                          }
                     }
+                    // else we dont have the component enabled so the mention should be by full name
                     else {
                          $name = $value->fullname;
                          $len = strlen($name);
-                         // we can lowercase the names because they dont matter 
+                         // we can lowercase the names because they dont matter in regards to casing
                          if (strtolower(substr($message, $messagekey + 1, $len)) == strtolower($name)) {
-                              // if we have a poster guid then this is a wall post else its a comment so the payload changes
-                              if (strlen($params['poster_guid']) > 0) {
-                                   $notifications->add($type, $params['poster_guid'], $params['object_guid'], $params['object_guid'], $value->guid);
-                              }
-                              else {
-                                   $notifications->add($type, $params['owner_guid'], $params['subject_guid'], $params['id'], $value->guid);
-                              }
+                              if (!in_array($value, $notifyUsersArr)) {
+                                   // only add the user to the array if they are not in it already
+                                   array_push($notifyUsersArr, $value);
+                              }                         
                          }
                     }
-
                }
+          }
+     }
+
+     // notify each user
+     foreach ($notifyUsersArr as $key => $value) {
+          // if we have a poster guid then this is a wall post else its a comment so the payload changes
+          if (strlen($params['poster_guid']) > 0) {
+               $notifications->add($type, $params['poster_guid'], $params['object_guid'], $params['object_guid'], $value->guid);
+          }
+          else {
+               $notifications->add($type, $params['owner_guid'], $params['subject_guid'], $params['id'], $value->guid);
           }
      }
 }
