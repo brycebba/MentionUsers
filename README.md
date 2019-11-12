@@ -10,7 +10,7 @@ This can be used in conjunction with the Display Username component as of v1.2 i
 
 -Mentions are not limited to the friends of the user, the entire user base can be mentioned
 
--Multiple mentions can be done in a post or comment.
+-Multiple mentions can be done in a post or comment. Be aware, if you duplicate mentions they will get a duplicate notification
 
 **TO INSTALL**
 
