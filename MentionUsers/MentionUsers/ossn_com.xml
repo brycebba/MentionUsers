@@ -7,7 +7,7 @@
     <description>Mention a user using the @ symbol in a post or comment to send a notification to that user</description>
     <license>GPLv3</license>
     <license_url>https://www.gnu.org/licenses/gpl-3.0.en.html</license_url>
-    <version>1.0</version>
+    <version>1.9</version>
 	<requires>
 		<type>ossn_version</type>
 		<version>5.0</version>
